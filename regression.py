@@ -43,3 +43,5 @@ class Neural_Net(nn.Module):
 model = Neural_Net(13,512,1)
 output = model(X)
 print(output.shape)
+
+print(X)
