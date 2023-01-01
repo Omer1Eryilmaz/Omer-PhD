@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from sklearn.datasets import load_boston
+from sklearn import preprocessing
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -12,8 +13,12 @@ import matplotlib.pyplot as plt
 
 #1- Boston House dataset download
 X, y = load_boston(return_X_y=True)
+X = X[:,[2,5]]
+X = preprocessing.normalize(X)
 X = torch.from_numpy(X).float()
 y = torch.from_numpy(y).float()
+
+
 plt.plot(X[:,1],y,'bo')
 plt.show()
 
@@ -25,46 +30,45 @@ plt.show()
 print("data size {}".format(X.shape))
 
 class Neural_Net(nn.Module):
-    def __init__(self,input_size,output_size):
+    def __init__(self,input_size,hidden_size,output_size):
         super(Neural_Net,self).__init__()
-        self.Linear1 = nn.Linear(input_size,output_size)
-        #self.Linear2 = nn.Linear(hidden_size,hidden_size)
-        #self.Linear3 = nn.Linear(hidden_size,output_size)
+        self.Linear1 = nn.Linear(input_size,hidden_size)
+        self.Linear2 = nn.Linear(hidden_size,hidden_size)
+        self.Linear3 = nn.Linear(hidden_size,output_size)
         self.activation = nn.ReLU()
 
     def forward(self,x):
         output = self.Linear1(x)
         output = self.activation(output)
-        #output = self.Linear2(output)
-        #output = self.activation(output)
-        #output = self.Linear3(output)
+        output = self.Linear2(output)
+        output = self.activation(output)
+        output = self.Linear3(output)
         # Consider adding activation function
         return output
 
-model = Neural_Net(13,1)
-output = model(X)
+model = Neural_Net(2,3,1)
+
 
 # Training
-criterion = nn.MSELoss()
+criterion = nn.L1Loss()
 
-epochs = 1000
+epochs = 10
 
 optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
 
-'''
 for epoch in range(epochs):
     optimizer.zero_grad()
-    
+    output = model(X)
     loss = criterion(output,y)
     loss.backward()
     optimizer.step()
     plot_loss.append(loss)
+    
 
-plt.plot(range(60,epochs),plot_loss[60:epochs])
+plt.plot(range(epochs),plot_loss)
 plt.show()
-print(plot_loss[999])
 
-'''
+
 
 
