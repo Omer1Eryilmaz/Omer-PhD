@@ -22,24 +22,49 @@ plt.show()
 # loss function MSE (y-activation)^2
 # activation function ReLU
 # Self> model1 = Neural_Net(13,1)
+print("data size {}".format(X.shape))
 
 class Neural_Net(nn.Module):
-    def __init__(self,input_size,hidden_size,output_size):
+    def __init__(self,input_size,output_size):
         super(Neural_Net,self).__init__()
-        self.Linear1 = nn.Linear(input_size,hidden_size)
-        self.Linear2 = nn.Linear(hidden_size,hidden_size)
-        self.Linear3 = nn.Linear(hidden_size,output_size)
+        self.Linear1 = nn.Linear(input_size,output_size)
+        #self.Linear2 = nn.Linear(hidden_size,hidden_size)
+        #self.Linear3 = nn.Linear(hidden_size,output_size)
         self.activation = nn.ReLU()
 
     def forward(self,x):
         output = self.Linear1(x)
         output = self.activation(output)
-        output = self.Linear2(output)
-        output = self.activation(output)
-        output = self.Linear3(output)
+        #output = self.Linear2(output)
+        #output = self.activation(output)
+        #output = self.Linear3(output)
         # Consider adding activation function
         return output
 
-model = Neural_Net(13,512,1)
+model = Neural_Net(13,1)
 output = model(X)
-print(output.shape)
+
+# Training
+criterion = nn.MSELoss()
+
+epochs = 1000
+
+optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
+plot_loss=[]
+
+'''
+for epoch in range(epochs):
+    optimizer.zero_grad()
+    
+    loss = criterion(output,y)
+    loss.backward()
+    optimizer.step()
+    plot_loss.append(loss)
+
+plt.plot(range(60,epochs),plot_loss[60:epochs])
+plt.show()
+print(plot_loss[999])
+
+'''
+
+
