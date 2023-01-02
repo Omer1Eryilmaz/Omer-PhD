@@ -15,12 +15,9 @@ import matplotlib.pyplot as plt
 X, y = load_boston(return_X_y=True)
 X = X[:,[2,5]]
 X = preprocessing.normalize(X)
-X = torch.from_numpy(X).float()
-y = torch.from_numpy(y).float()
+X = torch.tensor(X, requires_grad=False,dtype=torch.float)
+y = torch.tensor(y, requires_grad=False,dtype=torch.float)
 
-
-plt.plot(X[:,1],y,'bo')
-plt.show()
 
 #2- Fully connected network
 # 13 feature > 512> 512 > 1
@@ -46,13 +43,13 @@ class Neural_Net(nn.Module):
         # Consider adding activation function
         return output
 
-model = Neural_Net(2,3,1)
+model = Neural_Net(2,32,1)
 
 
 # Training
 criterion = nn.L1Loss()
 
-epochs = 10
+epochs = 100
 
 optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
