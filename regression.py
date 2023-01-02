@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 
 #1- Boston House dataset download
 X, y = load_boston(return_X_y=True)
-X = X[:,[2,5]]
 X = preprocessing.normalize(X)
 X = torch.tensor(X, requires_grad=True,dtype=torch.float)
 y = torch.tensor(y, requires_grad=True,dtype=torch.float)
@@ -31,7 +30,8 @@ class Neural_Net(nn.Module):
         super(Neural_Net,self).__init__()
         self.Linear1 = nn.Linear(input_size,hidden_size)
         self.Linear2 = nn.Linear(hidden_size,hidden_size)
-        self.Linear3 = nn.Linear(hidden_size,output_size)
+        self.Linear3 = nn.Linear(hidden_size,hidden_size)
+        self.Linear4 = nn.Linear(hidden_size,output_size)
         self.activation = nn.ReLU()
 
     def forward(self,x):
@@ -40,18 +40,20 @@ class Neural_Net(nn.Module):
         output = self.Linear2(output)
         output = self.activation(output)
         output = self.Linear3(output)
+        output = self.activation(output)
+        output = self.Linear4(output)
         # Consider adding activation function
         return output
 
-model = Neural_Net(2,32,1)
+model = Neural_Net(13,32,1)
 
 
 # Training
-criterion = nn.L1Loss()
+criterion = nn.MSELoss()
 
 epochs = 100
 
-optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
+optimizer = torch.optim.SGD(model.parameters(),lr=0.03,momentum=0.9)
 plot_loss=[]
 
 for epoch in range(epochs):
@@ -66,6 +68,19 @@ for epoch in range(epochs):
 plt.plot(range(epochs),plot_loss)
 plt.show()
 
+"""
+# Hyperparameters
+in_channels = 1
+num_classes = 10
+learning_rate = 0.001
+batch_size = 64
+num_epochs = 3
 
+# Load Data
+train_dataset = datasets.MNIST(root="dataset/", train=True, transform=transforms.ToTensor(), download=True)
+test_dataset = datasets.MNIST(root="dataset/", train=False, transform=transforms.ToTensor(), download=True)
+train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=Tr
+"""
 
 
