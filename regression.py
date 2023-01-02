@@ -5,6 +5,9 @@ from sklearn import preprocessing
 import numpy as np
 import matplotlib.pyplot as plt
 
+from torch.utils.data.sampler import SubsetRandomSampler
+from torch.utils.data.dataloader import DataLoader
+
 # 1- Boston House dataset download
 #       Optional PCA 
 #2- Fully connected network
@@ -12,12 +15,15 @@ import matplotlib.pyplot as plt
 #4- Print loss
 
 #1- Boston House dataset download
+batch_size=50
 X, y = load_boston(return_X_y=True)
 X = X[:,[2,5]]
 X = preprocessing.normalize(X)
+train_loader = DataLoader(dataset=X, batch_size=batch_size, shuffle=True)
+
+X= next(iter(train_loader))
 X = torch.tensor(X, requires_grad=True,dtype=torch.float)
 y = torch.tensor(y, requires_grad=True,dtype=torch.float)
-
 
 #2- Fully connected network
 # 13 feature > 512> 512 > 1
@@ -43,29 +49,28 @@ class Neural_Net(nn.Module):
         # Consider adding activation function
         return output
 
-model = Neural_Net(2,32,1)
+model = Neural_Net(2,512,1)
 
 
 # Training
 criterion = nn.L1Loss()
-
-epochs = 100
-
-optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
+epochs = 200
+optimizer = torch.optim.SGD(model.parameters(),lr=0.03,momentum=0.8)
 plot_loss=[]
 
 for epoch in range(epochs):
     optimizer.zero_grad()
     output = model(X)
-    loss = criterion(output,y)
+    loss = criterion(y,output)
     loss.backward()
     optimizer.step()
     plot_loss.append(loss)
-    
 
-plt.plot(range(epochs),plot_loss)
+
+plot_array = [i.detach().numpy() for i in plot_loss]
+plt.plot(range(epochs),plot_array )
 plt.show()
 
-
-
-
+#mean_error=np.mean(np.abs(output.detach().numpy()-y.detach().numpy()))
+#np.mean(y)-output
+#y = [i.detach().numpy() for i in y]
