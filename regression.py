@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 X, y = load_boston(return_X_y=True)
 X = X[:,[2,5]]
 X = preprocessing.normalize(X)
-X = torch.tensor(X, requires_grad=False,dtype=torch.float)
-y = torch.tensor(y, requires_grad=False,dtype=torch.float)
+X = torch.tensor(X, requires_grad=True,dtype=torch.float)
+y = torch.tensor(y, requires_grad=True,dtype=torch.float)
 
 
 #2- Fully connected network
