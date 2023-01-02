@@ -17,7 +17,6 @@ from torch.utils.data.dataloader import DataLoader
 #1- Boston House dataset download
 batch_size=50
 X, y = load_boston(return_X_y=True)
-X = X[:,[2,5]]
 X = preprocessing.normalize(X)
 train_loader = DataLoader(dataset=X, batch_size=batch_size, shuffle=True)
 
@@ -37,7 +36,8 @@ class Neural_Net(nn.Module):
         super(Neural_Net,self).__init__()
         self.Linear1 = nn.Linear(input_size,hidden_size)
         self.Linear2 = nn.Linear(hidden_size,hidden_size)
-        self.Linear3 = nn.Linear(hidden_size,output_size)
+        self.Linear3 = nn.Linear(hidden_size,hidden_size)
+        self.Linear4 = nn.Linear(hidden_size,output_size)
         self.activation = nn.ReLU()
 
     def forward(self,x):
@@ -46,6 +46,8 @@ class Neural_Net(nn.Module):
         output = self.Linear2(output)
         output = self.activation(output)
         output = self.Linear3(output)
+        output = self.activation(output)
+        output = self.Linear4(output)
         # Consider adding activation function
         return output
 
@@ -56,6 +58,15 @@ model = Neural_Net(2,512,1)
 criterion = nn.L1Loss()
 epochs = 200
 optimizer = torch.optim.SGD(model.parameters(),lr=0.03,momentum=0.8)
+model = Neural_Net(13,32,1)
+
+
+# Training
+criterion = nn.MSELoss()
+
+epochs = 100
+
+optimizer = torch.optim.SGD(model.parameters(),lr=0.03,momentum=0.9)
 plot_loss=[]
 
 for epoch in range(epochs):
@@ -66,6 +77,8 @@ for epoch in range(epochs):
     optimizer.step()
     plot_loss.append(loss)
 
+plt.plot(range(epochs),plot_loss)
+plt.show()
 
 plot_array = [i.detach().numpy() for i in plot_loss]
 plt.plot(range(epochs),plot_array )
