@@ -31,8 +31,7 @@ X= scaler.transform(X)
 
 X = torch.tensor(X, requires_grad=True,dtype=torch.float)
 y = torch.tensor(y, requires_grad=True,dtype=torch.float)
-
-y = y.view(len(y),1)
+y=y.view(len(y),1)
 
 
 #2 Fully connected network   -------------------
@@ -65,7 +64,7 @@ class Neural_Net(nn.Module):
 model = Neural_Net(13,128,64,1)
 # Training
 criterion = nn.L1Loss()
-epochs = 1000
+epochs = 100
 optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
 
@@ -80,3 +79,6 @@ for epoch in range(epochs):
 plot_array = [i.detach().numpy() for i in plot_loss]
 plt.plot(range(epochs),plot_array )
 plt.show()
+
+print(f'model first 5 output: {output[:5]} ')
+print(f'label: {y[:5]}')
