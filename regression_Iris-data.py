@@ -11,29 +11,36 @@ list(data.target_names)
 
 data,target = sklearn.datasets.load_iris(return_X_y=True, as_frame=False)
 
-x = data[0:50,1]
-y = data[0:50,0]
+from sklearn.preprocessing import StandardScaler
+
+x = data[0:50,(1,2)]
+y = data[0:50,(0,1)]
+
+x=x.reshape(-1, 1) 
 print(x.shape)
+y=y.reshape(-1, 1) 
 print(y.shape)
 
-plt.plot(x,y,'ro')
-plt.show()
+#plt.plot(x,y,'ro')
+#plt.show()
 
 x = torch.tensor(x, requires_grad=True,dtype=torch.float)
-x = x.view(50,1)
-
 y = torch.tensor(y, requires_grad=True,dtype=torch.float)
 
-y = y.view(50,1)
-# simdi bunda ayni seyleri deneriz
+
+#2 Fully connected network   -------------------
+# 13 feature > 512> 512 > 1
+# loss function MSE (y-activation)^2
+# activation function ReLU
+# Self> model1 = Neural_Net(13,1)
+print("data size {}".format(x.shape))
 
 class Neural_Net(nn.Module):
-    def __init__(self,input_size,hidden_size,output_size):
+    def __init__(self,input_size,hidden_size1,hidden_size2,output_size):
         super(Neural_Net,self).__init__()
-        self.Linear1 = nn.Linear(input_size,hidden_size)
-        self.Linear2 = nn.Linear(hidden_size,hidden_size)
-        self.Linear3 = nn.Linear(hidden_size,hidden_size)
-        self.Linear4 = nn.Linear(hidden_size,output_size)
+        self.Linear1 = nn.Linear(input_size,hidden_size1)
+        self.Linear2 = nn.Linear(hidden_size1,hidden_size2)
+        self.Linear3 = nn.Linear(hidden_size2,output_size)
         self.activation = nn.Sigmoid()
 
     def forward(self,x):
@@ -42,35 +49,29 @@ class Neural_Net(nn.Module):
         output = self.Linear2(output)
         output = self.activation(output)
         output = self.Linear3(output)
-        output = self.activation(output)
-        output = self.Linear4(output)
+
         # Consider adding activation function
         return output
 
-model = Neural_Net(1,512,1) # belki giris 150 ??
-
-
+model = Neural_Net(1,20,20,1)
 # Training
-criterion = nn.MSELoss()
-
-epochs = 100
-
-optimizer = torch.optim.SGD(model.parameters(),lr=0.3,momentum=0.9)
+criterion = nn.L1Loss()
+epochs = 1000
+optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
-all_outputs = []
-for epoch in range(epochs):
 
+for epoch in range(epochs):
     optimizer.zero_grad()
-    output = model(x) # yeni data kucuk x
-    loss = criterion(y,output)
+    output = model(x)
+    loss = criterion(output,y)
     loss.backward()
     optimizer.step()
     plot_loss.append(loss)
-    all_outputs.append(output)
 
-plt.plot(range(epochs),plot_loss)
-#plt.plot(range(epochs),output)
+plot_array = [i.detach().numpy() for i in plot_loss]
+plt.plot(range(epochs),plot_array )
 plt.show()
 
-
-
+print(f'model first 5 output: {output[5:10]} ')
+print(f'label: {y[5:10]}')
+print(f'loss: {loss}')
