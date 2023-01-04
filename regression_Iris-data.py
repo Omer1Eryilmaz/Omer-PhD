@@ -10,10 +10,8 @@ data.target[[110, 65, 50]] # 0-50 arasi 0, 51-100 1, 101-149 2 bunlar indis
 list(data.target_names)
 
 data,target = sklearn.datasets.load_iris(return_X_y=True, as_frame=False)
-
 from sklearn.preprocessing import StandardScaler
-
-x = data[0:50,(1,2)]
+x = data[0:50,(1,2)]  #works that way ?
 y = data[0:50,(0,1)]
 
 x=x.reshape(-1, 1) 
@@ -29,7 +27,6 @@ y = torch.tensor(y, requires_grad=True,dtype=torch.float)
 
 
 #2 Fully connected network   -------------------
-# 13 feature > 512> 512 > 1
 # loss function MSE (y-activation)^2
 # activation function ReLU
 # Self> model1 = Neural_Net(13,1)
