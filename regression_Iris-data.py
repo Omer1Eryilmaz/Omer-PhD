@@ -11,7 +11,7 @@ list(data.target_names)
 
 data,target = sklearn.datasets.load_iris(return_X_y=True, as_frame=False)
 from sklearn.preprocessing import StandardScaler
-x = data[0:50,(1,2)]  #works that way ?
+x = data[0:50,(1,2)]  #works that way ????
 y = data[0:50,(0,1)]
 
 x=x.reshape(-1, 1) 
@@ -52,7 +52,7 @@ class Neural_Net(nn.Module):
 
 model = Neural_Net(1,64,128,1)
 # Training
-criterion = nn.L1Loss()
+criterion = nn.MSELoss() #Works better than L1loss
 epochs = 1000
 optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
