@@ -11,7 +11,6 @@ import numpy as np
 # Standardization converts data into in a shape with zero mean and unit variance.
 
 # Normalize the given data X
- 
 X = [[ 1., -1.,  2.],
     [ 2.,  0.,  0.],  
     [ 0.,  1., -1.]]
