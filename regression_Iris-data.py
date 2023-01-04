@@ -50,7 +50,7 @@ class Neural_Net(nn.Module):
         # Consider adding activation function
         return output
 
-model = Neural_Net(1,20,20,1)
+model = Neural_Net(1,64,128,1)
 # Training
 criterion = nn.L1Loss()
 epochs = 1000
