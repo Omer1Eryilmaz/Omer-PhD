@@ -24,11 +24,9 @@ scaler=StandardScaler()
 scaler.fit(X)
 X= scaler.transform(X)
 
-
 #X = preprocessing.normalize(X)
 #print(np.mean(X_normalized,axis=0))
-#train_loader = DataLoader(dataset=X, batch_size=batch_size, shuffle=True)
-#X= next(iter(train_loader))
+
 
 X = torch.tensor(X, requires_grad=True,dtype=torch.float)
 y = torch.tensor(y, requires_grad=True,dtype=torch.float)
@@ -65,7 +63,7 @@ class Neural_Net(nn.Module):
 model = Neural_Net(13,128,64,1)
 # Training
 criterion = nn.MSELoss()
-epochs = 300
+epochs = 100
 optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
 
