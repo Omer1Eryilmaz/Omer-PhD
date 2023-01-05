@@ -33,27 +33,27 @@ y = torch.tensor(y, requires_grad=True,dtype=torch.float)
 print("data size {}".format(x.shape))
 
 class Neural_Net(nn.Module):
-    def __init__(self,input_size,hidden_size1,hidden_size2,output_size):
+    def __init__(self,input_size,hidden_size1,output_size):
         super(Neural_Net,self).__init__()
         self.Linear1 = nn.Linear(input_size,hidden_size1)
-        self.Linear2 = nn.Linear(hidden_size1,hidden_size2)
-        self.Linear3 = nn.Linear(hidden_size2,output_size)
+        #self.Linear2 = nn.Linear(hidden_size1,hidden_size2)
+        self.Linear3 = nn.Linear(hidden_size1,output_size)
         self.activation = nn.ReLU()
 
     def forward(self,x):
         output = self.Linear1(x)
         output = self.activation(output)
-        output = self.Linear2(output)
-        output = self.activation(output)
+        #output = self.Linear2(output)
+        #output = self.activation(output)
         output = self.Linear3(output)
 
         # Consider adding activation function
         return output
 
-model = Neural_Net(1,12,12,1)
+model = Neural_Net(1,32,1)
 # Training
-criterion = nn.MSELoss() #Works better than L1loss
-epochs = 500
+criterion = nn.L1Loss() #Works better than L1loss
+epochs = 100
 optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
 
