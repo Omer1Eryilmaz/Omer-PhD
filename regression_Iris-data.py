@@ -11,8 +11,8 @@ list(data.target_names)
 
 data,target = sklearn.datasets.load_iris(return_X_y=True, as_frame=False)
 from sklearn.preprocessing import StandardScaler
-x = data[0:50,(1,2)]  #works that way ????
-y = data[0:50,(0,1)]
+x = data[0:50,(0,1)]  #works that way ????
+y = data[0:50,(2,3)]
 
 x=x.reshape(-1, 1) 
 print(x.shape)
@@ -38,7 +38,7 @@ class Neural_Net(nn.Module):
         self.Linear1 = nn.Linear(input_size,hidden_size1)
         self.Linear2 = nn.Linear(hidden_size1,hidden_size2)
         self.Linear3 = nn.Linear(hidden_size2,output_size)
-        self.activation = nn.Sigmoid()
+        self.activation = nn.ReLU()
 
     def forward(self,x):
         output = self.Linear1(x)
@@ -50,10 +50,10 @@ class Neural_Net(nn.Module):
         # Consider adding activation function
         return output
 
-model = Neural_Net(1,64,128,1)
+model = Neural_Net(1,12,12,1)
 # Training
 criterion = nn.MSELoss() #Works better than L1loss
-epochs = 1000
+epochs = 500
 optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
 
@@ -72,3 +72,9 @@ plt.show()
 print(f'model first 5 output: {output[5:10]} ')
 print(f'label: {y[5:10]}')
 print(f'loss: {loss}')
+
+y=y.detach().numpy()
+output=output.detach().numpy()
+plt.plot(range(100),output,'ro')
+plt.plot(range(100),y,'bo')
+plt.show()
