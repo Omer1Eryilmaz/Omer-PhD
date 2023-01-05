@@ -5,14 +5,16 @@ import matplotlib.pyplot as plt
 from sklearn.datasets import load_iris
 import sklearn
 import pandas as pd
+
 data = load_iris()
 data.target[[110, 65, 50]] # 0-50 arasi 0, 51-100 1, 101-149 2 bunlar indis
 list(data.target_names)
 
 data,target = sklearn.datasets.load_iris(return_X_y=True, as_frame=False)
 from sklearn.preprocessing import StandardScaler
-x = data[0:50,(0,1)]  #works that way ????
-y = data[0:50,(2,3)]
+
+x = data[:,0]  #works that way ????
+y = data[:,1]
 
 x=x.reshape(-1, 1) 
 print(x.shape)
@@ -52,8 +54,8 @@ class Neural_Net(nn.Module):
 
 model = Neural_Net(1,32,1)
 # Training
-criterion = nn.L1Loss() #Works better than L1loss
-epochs = 100
+criterion = nn.MSELoss() #Works better than L1loss
+epochs = 500
 optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
 
@@ -69,12 +71,12 @@ plot_array = [i.detach().numpy() for i in plot_loss]
 plt.plot(range(epochs),plot_array )
 plt.show()
 
-print(f'model first 5 output: {output[5:10]} ')
-print(f'label: {y[5:10]}')
+print(f'model first 5 output: {output[20:25]} ')
+print(f'label: {y[20:25]}')
 print(f'loss: {loss}')
 
 y=y.detach().numpy()
 output=output.detach().numpy()
-plt.plot(range(100),output,'ro')
-plt.plot(range(100),y,'bo')
+plt.plot(range(150),output,'ro')
+plt.plot(range(150),y,'bo')
 plt.show()
