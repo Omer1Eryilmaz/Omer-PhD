@@ -63,7 +63,7 @@ class Neural_Net(nn.Module):
 model = Neural_Net(13,128,64,1)
 # Training
 criterion = nn.MSELoss()
-epochs = 100
+epochs = 10000
 optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
 

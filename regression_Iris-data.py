@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
 import sklearn
 import pandas as pd
 
@@ -13,13 +14,18 @@ list(data.target_names)
 data,target = sklearn.datasets.load_iris(return_X_y=True, as_frame=False)
 from sklearn.preprocessing import StandardScaler
 
-x = data[:,0]  #works that way ????
-y = data[:,1]
+x = data[:,(0,1)]  #works that way ????
+y = data[:,(1,2)]
 
 x=x.reshape(-1, 1) 
 print(x.shape)
 y=y.reshape(-1, 1) 
 print(y.shape)
+
+scale = StandardScaler().fit(x)
+x= scale.transform(x)
+#scale = StandardScaler().fit(y)
+#y = scale.transform(y)
 
 #plt.plot(x,y,'ro')
 #plt.show()
@@ -55,7 +61,7 @@ class Neural_Net(nn.Module):
 model = Neural_Net(1,32,1)
 # Training
 criterion = nn.MSELoss() #Works better than L1loss
-epochs = 500
+epochs = 10000
 optimizer = torch.optim.SGD(model.parameters(),lr=0.003,momentum=0.9)
 plot_loss=[]
 
@@ -77,6 +83,6 @@ print(f'loss: {loss}')
 
 y=y.detach().numpy()
 output=output.detach().numpy()
-plt.plot(range(150),output,'ro')
-plt.plot(range(150),y,'bo')
+plt.plot(range(300),output,'ro')
+plt.plot(range(300),y,'bo')
 plt.show()
