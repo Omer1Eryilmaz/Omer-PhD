@@ -40,23 +40,33 @@ class MyModule(nn.Module):
                 x = self.tanh(x)
             self.outputs.append(x)
 
-        return x / (torch.sqrt(torch.sum(torch.power(torch.abs(x), 2), axis=1, keepdims=True)))
+        return x / (torch.sqrt(torch.sum(torch.pow(torch.abs(x), 2), axis=1, keepdims=True)))
 
-model = MyModule([4, 16, 32, 2])# 1,16- 16-32 , 32- 2 
-xx = 
-def srs_loss(xx,ideal):
-    return -torch.mean(torch.exp(xx[target!=1]))
+model = MyModule([4, 512, 512, 3])# 1,16- 16-32 , 32- 2 
+output = model(data)
 
 
-criterion = nn.MSELoss()
-optimizer = torch.optim.SGD(model.parameters(),lr=0.001,momentum=0.9)
+kernel = torch.matmul(output,output.T)
+ideal = torch.matmul(target,target.T) 
 
-epochs = 10000
+kernel = torch.tensor(kernel,requires_grad=True,dtype=torch.float)
+ideal = torch.tensor(ideal,requires_grad=True,dtype=torch.float)
+
+criterion = nn.CrossEntropyLoss()
+"""
+def srs_loss(kernel,ideal):
+    output = torch.mean(torch.exp(kernel[ideal!=1]))
+    return torch.tensor(output,requires_grad=True)
+"""
+
+optimizer = torch.optim.Adam(params = model.parameters(), lr=1e-3)
+
+epochs = 100
 plot_loss = []
 for epoch in range(epochs):
     optimizer.zero_grad()
     output = model(data)
-    loss = criterion(output,target)
+    loss = criterion(kernel,ideal)
     loss.backward()
     optimizer.step()
 
@@ -70,13 +80,3 @@ print(f'model first 5 output: {output[60:65]} ')
 print(f'label: {target[60:65]}')
 print(f'loss: {loss}')
 
-
-
-
-"""
-"""
-def tanh_norm(inputs):
-    z = tanh(inputs)
-    znorm = z / (np.sqrt(np.sum(np.power(np.abs(z), 2), axis=1, keepdims=True)))
-    return znorm
-"""
