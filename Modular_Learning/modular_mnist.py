@@ -45,6 +45,8 @@ OutputModule = nn.Sequential(
     nn.Linear(in_features=84, out_features=10),
 ).to(device)
 
+net=nn.Sequential(InputModule,OutputModule)
+
 def forwardPass_InputModule(x):
     x = InputModule(x)
     return x
@@ -120,7 +122,7 @@ optimizer = torch.optim.Adam(params=InputModule.parameters(), lr=1e-3)
 
 
 num_classes=10
-n_epochs=64
+n_epochs=65
 
 # Train Input module 
 for epoch in range(n_epochs):
@@ -140,7 +142,7 @@ for epoch in range(n_epochs):
         net_repr = forwardPass_InputModule(inputs).detach().cpu()
         net_repr = tanh_norm(net_repr).numpy()
 
-"""
+
       
         #fig = plt.figure()
         #plt.title("Input Module Epoch{}".format(epoch))
@@ -151,8 +153,9 @@ for epoch in range(n_epochs):
 # Train Output Module
 OutputModule_optimizer = torch.optim.Adam(params=OutputModule.parameters(), lr=1e-3)
 OutputModule_loss_fn = torch.nn.CrossEntropyLoss()
-#net = nn.Sequential(InputModule, OutputModule)
+net = nn.Sequential(InputModule, OutputModule)
 # Stop graident
+
 for param in InputModule.parameters():
     param.requires_grad = False
 
@@ -173,9 +176,10 @@ for epoch in range(n_epochs):
         optimizer.zero_grad(set_to_none=True)
         loss_fn.backward()
         optimizer.step()
+
     # get final accuracy
     _, pred = torch.max(net(inputs), dim=1)
     print("Epoch {}  acc {}:.3f (%):".format(epoch,(1 - torch.mean((pred != targets).to(torch.float)).item()) * 100))
-"""       
+    
     
         
