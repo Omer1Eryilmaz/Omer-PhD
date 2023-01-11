@@ -120,7 +120,7 @@ def SRS_Loss(x, y, num_classes):
 optimizer = torch.optim.Adam(params=InputModule.parameters(), lr=1e-3)
 
 num_classes = 10
-n_epochs =  100
+n_epochs =  3
 
 # Train Input module
 for epoch in range(n_epochs):
@@ -133,7 +133,7 @@ for epoch in range(n_epochs):
         loss_fn.backward()
         optimizer.step()
 
-    if (epoch % 5) == 0:
+    if (epoch % 1) == 0:
         print(epoch, loss_fn.item())
         net_repr = forwardPass_InputModule(inputs).detach().cpu()
         net_repr = tanh_norm(net_repr).numpy()
@@ -151,10 +151,20 @@ OutputModule_loss_fn = torch.nn.CrossEntropyLoss()
 #stop gradient
 for param in InputModule.parameters():
     param.requires_grad = False
-n_epochs =  500
+n_epochs =  1
+
+# initilize Output module parameters
+for param in OutputModule.parameters():
+    #nn.init.uniform_(param)
+    nn.init.normal_(param)
+
+
+
 for epoch in range(n_epochs):
+
     InputModule.train()
     OutputModule.train()
+    
     for batch in trainloader:
         inputs, targets = batch
         inputs = inputs.to(device)
@@ -166,6 +176,7 @@ for epoch in range(n_epochs):
         loss_fn = OutputModule_loss_fn(forwardPass_OutputModule(InputForOutputModule), targets)
         loss_fn.backward()
         OutputModule_optimizer.step()
+        
     # get final accuracy
     InputModule.eval()
     OutputModule.eval()
@@ -181,6 +192,6 @@ for epoch in range(n_epochs):
             _, pred = torch.max(pred, dim=1)
             preds += pred.detach().cpu().numpy().tolist()
             labels += targets.detach().cpu().numpy().tolist()
-        pred = np.array(preds)
+        pred = np.array(preds)# disari al
         targets = np.array(labels)
         print("Epoch {}  acc {:.3f} (%):".format(epoch, np.mean(pred == targets)))
