@@ -1,10 +1,15 @@
+"""
+Reimplementation of LeNet-5 modular training experiment in 
+(Duan, S., Yu, S., & Príncipe, J. C. (2021). 
+Modularizing deep learning via pairwise learning with kernels. 
+IEEE Transactions on Neural Networks and Learning Systems, 33(4), 1441-1451).
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
-import datetime
 import torch
-from torch import nn, optim
+from torch import nn
 from torchvision import datasets, transforms
-import torch.nn.functional as F
 
 device = ("cuda" if torch.cuda.is_available() else "cpu")  # Use GPU or CPU for training
 
@@ -19,7 +24,7 @@ trainloader = torch.utils.data.DataLoader(train_set, batch_size=200, shuffle=Tru
 # If train=True, it creates dataset from train-images-idx3-ubyte, otherwise from t10k-images-idx3-ubyte.
 test_set = datasets.FashionMNIST('DATA_MNIST/', download=False, train=False, transform=transform)
 # shuffle (bool, optional) – set to True to have the data reshuffled at every epoch (default: False). 
-testloader = torch.utils.data.DataLoader(test_set, batch_size=200, shuffle=True) #if accuracy is bad convert shuffle to False?
+testloader = torch.utils.data.DataLoader(test_set, batch_size=200, shuffle=True)
 
 train_data_size = len(train_set)
 test_data_size = len(test_set)
@@ -28,7 +33,6 @@ def tanh_norm(inputs):
     z = torch.tanh(inputs)
     znorm = z / (torch.sqrt(torch.sum(torch.pow(torch.abs(z), 2), axis=1, keepdims=True)))
     return znorm
-
 
 InputModule = nn.Sequential(
     nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1),
@@ -46,18 +50,18 @@ InputModule = nn.Sequential(
 OutputModule = nn.Sequential(
     nn.Linear(in_features=84, out_features=10),
 ).to(device)
+
 def forwardPass_InputModule(x):
     x = InputModule(x)
     return x
 
-
+# A normalized Tanh activation function connects the input and output modules.
 def forwardPass_OutputModule(x):
-    x = tanh_norm(x)
-    x = OutputModule(x)
-    # x = F.softmax(x, dim=1) ***important change***
+    x = tanh_norm(x) # normalized Tanh activation function
+    x = OutputModule(x) 
     return x
 
-
+# Supervised Representation Similarity (SRS) Loss (refer to the paper for a detailed explaination)
 def SRS_Loss(x, y, num_classes):
     def k_mtrx(x0, x1):
         return torch.matmul(tanh_norm(x0), tanh_norm(x1).T)
@@ -74,9 +78,7 @@ def SRS_Loss(x, y, num_classes):
         if target.ndim > 1:
             target = torch.squeeze(target)
         target_onehot = torch.zeros((target.shape[0], n_classes))
-        # target_onehot[range(target.size(0)), target] = 1
         target_onehot[range(target.size(0)), target.type(torch.long)] = 1
-        # target_onehot[range(target.shape[0]), target.type(torch.long)] = 1
         return target_onehot
 
     def get_ideal_k_mtrx(target1, target2, n_classes):
@@ -114,13 +116,13 @@ def SRS_Loss(x, y, num_classes):
     k_min = -1.
     xx = map_input(x)
     k_ideal = get_ideal_k_mtrx(y, y, num_classes)  # We are using phi(tanh) in the first module's training.
-    return torch.mean(torch.exp(xx[k_ideal == k_min])) # loss is possitive different from the paper.
+    return torch.mean(torch.exp(xx[k_ideal == k_min])) # loss is possitive different from the paper*.
 
 ######################### Train the input module #########################
 optimizer = torch.optim.Adam(params=InputModule.parameters(), lr=1e-3)
 
-num_classes = 10
-n_epochs =  3
+num_classes = 100
+n_epochs =  1
 
 # Train Input module
 for epoch in range(n_epochs):
@@ -148,18 +150,13 @@ for epoch in range(n_epochs):
 OutputModule_optimizer = torch.optim.Adam(params=OutputModule.parameters(), lr=1e-3)
 OutputModule_loss_fn = torch.nn.CrossEntropyLoss()
 # net = nn.Sequential(InputModule, OutputModule)
+
 #stop gradient
 for param in InputModule.parameters():
     param.requires_grad = False
-n_epochs =  1
+n_epochs =  50
 
-# initilize Output module parameters
-for param in OutputModule.parameters():
-    #nn.init.uniform_(param)
-    nn.init.normal_(param)
-
-
-
+print("*** Test results ***")
 for epoch in range(n_epochs):
 
     InputModule.train()
@@ -171,8 +168,6 @@ for epoch in range(n_epochs):
         targets = targets.to(device)
         OutputModule_optimizer.zero_grad()
         InputForOutputModule = forwardPass_InputModule(inputs)
-        # print(forwardPass_OutputModule(InputForOutputModule).shape)
-        # print()
         loss_fn = OutputModule_loss_fn(forwardPass_OutputModule(InputForOutputModule), targets)
         loss_fn.backward()
         OutputModule_optimizer.step()
@@ -182,16 +177,16 @@ for epoch in range(n_epochs):
     OutputModule.eval()
     preds = []
     labels = []
+    
     with torch.no_grad():
         for batch in testloader:
             inputs, targets = batch
             inputs = inputs.to(device)
             pred = forwardPass_InputModule(inputs)
-            pred = forwardPass_OutputModule(pred)
-            pred = F.softmax(pred, dim=1) # Why don't we put this in the OutMod TRAINING?
+            pred = forwardPass_OutputModule(pred)   
             _, pred = torch.max(pred, dim=1)
             preds += pred.detach().cpu().numpy().tolist()
             labels += targets.detach().cpu().numpy().tolist()
-        pred = np.array(preds)# disari al
+        pred = np.array(preds)
         targets = np.array(labels)
         print("Epoch {}  acc {:.3f} (%):".format(epoch, np.mean(pred == targets)))
