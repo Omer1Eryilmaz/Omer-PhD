@@ -1,23 +1,51 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
-from torch import nn, optim
-from torchvision import datasets, transforms
-import torch.nn.functional as F
+import matplotlib.pyplot as plt
+import torch.nn as nn
+import numpy as np
+from sklearn import datasets
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 device = ("cuda" if torch.cuda.is_available() else "cpu") # Use GPU or CPU for training
+# Load dataset
+bc = datasets.load_boston()
+X,y = bc.data, bc.target
+
+
+n_samples, n_features = X.shape
+X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state = 1234)
+
+#Scale
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.fit_transform(X_test)
+
+
+#Convert to Torch tensor 
+X_train = torch.from_numpy(X_train.astype(np.float32))
+X_test = torch.from_numpy(X_test.astype(np.float32))
+y_train = torch.from_numpy(y_train.astype(np.float32))
+y_test = torch.from_numpy(y_test.astype(np.float32))
+
+y_train = y_train.view(y_train.shape[0],1)
+y_test = y_test.view(y_test.shape[0],1)
+
+# model 
 
 def tanh_norm(inputs):
     z = torch.tanh(inputs)
     znorm = z / (torch.sqrt(torch.sum(torch.pow(torch.abs(z), 2), axis=1, keepdims=True)))
     return znorm
 
-InputModule = nn.Sequential(nn.Linear(32,512),
+InputModule = nn.Sequential(
+    nn.Linear(13,512),
     nn.ReLU(),
     nn.Linear(512,2)).to(device)
 
 OutputModule = nn.Sequential(
-    nn.Linear(in_features=2, out_features=10),
+    nn.Linear(2, 512),
+    nn.ReLU(),
+    nn.Linear(512,1),
 ).to(device)
 
 def forwardPass_InputModule(x):
@@ -89,30 +117,70 @@ def SRS_Loss(x,y, num_classes):
 optimizer = torch.optim.Adam(params=InputModule.parameters(), lr=1e-3)
 
 
-num_classes=10
-n_epochs=65
+num_classes=500 # num of class should be greater equal than sample size 
+                 #  to make sure each sample is from a different class.
+n_epochs=50
 
 # Train Input module 
 for epoch in range(n_epochs):
     
-    inputs = inputs.to(device)
-    targets = targets.to(device)
+    X_train  = X_train.to(device)
+    y_train = y_train.to(device)
     optimizer.zero_grad()
-    loss_fn = SRS_Loss(forwardPass_InputModule(inputs), targets, num_classes)
+    loss_fn = SRS_Loss(forwardPass_InputModule(X_train), y_train, num_classes)
     loss_fn.backward()
     optimizer.step()
 
     
-    if (epoch % 1) == 0:
+    if (epoch % 50) == 0:
         print(epoch, loss_fn.item())
-        net_repr = forwardPass_InputModule(inputs).detach().cpu()
+        net_repr = forwardPass_InputModule(X_train).detach().cpu()
         net_repr = tanh_norm(net_repr).numpy()
+        plt.plot(net_repr[:,0],net_repr[:,1],'bo')
+        plt.show()
+"""
+Alternatively you can save trained input module and then load its parameters and just train the output module.
+https://pytorch.org/tutorials/beginner/saving_loading_models.html
+"""
+ 
+
+# Train Output Module
+OutputModule_optimizer = torch.optim.Adam(params=OutputModule.parameters(), lr=1e-3)
+OutputModule_loss_fn = torch.nn.MSELoss()
 
 
-      
-        #fig = plt.figure()
-        #plt.title("Input Module Epoch{}".format(epoch))
-        #ax = fig.add_subplot(projection='3d')
-        #ax.scatter(net_repr[:,0],net_repr[:,1],net_repr[:,2],c=targets)
-        #plt.show()
+#Do not train input module
+for param in InputModule.parameters():
+    param.requires_grad = False
+
+n_epochs =  5000
+
+print("*** Test results ***")
+for epoch in range(n_epochs):
+
+    InputModule.train()
+    OutputModule.train()
+    X_train = X_train.to(device)
+    y_train = y_train.to(device)
+    OutputModule_optimizer.zero_grad()
+    InputForOutputModule = forwardPass_InputModule(X_train)
+    loss_fn = OutputModule_loss_fn(forwardPass_OutputModule(InputForOutputModule), y_train)
+    loss_fn.backward()
+    OutputModule_optimizer.step()
+        
+    # get final accuracy
+    InputModule.eval()
+    OutputModule.eval()
+    preds = []
+    labels = []
     
+    with torch.no_grad():
+        X_test = X_test.to(device)
+        pred = forwardPass_InputModule(X_test)
+        pred = forwardPass_OutputModule(pred)   
+        _, pred = torch.max(pred, dim=1)
+        preds += pred.detach().cpu().numpy().tolist()
+        labels += y_test.detach().cpu().numpy().tolist()
+preds = np.array(preds)
+labels = np.array(labels)
+"""
