@@ -138,7 +138,7 @@ for var_name in optimizer.state_dict():
 num_classes = 404 # num of class should be greater equal than sample size 
                  #  to make sure each sample is from a different class.
 
-n_epochs=10000
+n_epochs=1
 # Train Input module 
 for epoch in range(n_epochs):
     
@@ -157,7 +157,7 @@ for epoch in range(n_epochs):
         plt.plot(net_repr[:,0],net_repr[:,1],'bo')
         plt.show()
 
-torch.save(Input_model.state_dict(),os.path.join(PATH,'inputParameters_10000.pt'))
+#torch.save(Input_model.state_dict(),os.path.join(PATH,'inputParameters_10000.pt'))
 
 Input_model.load_state_dict(torch.load(os.path.join(PATH,'inputParameters_10000.pt')))
 Input_model.eval()
@@ -176,6 +176,7 @@ n_epochs =  5000
 print("*** Test results ***")
 plot_loss =[]
 plot_pred = []
+test_loss = []
 plot_target =[]
 
 for epoch in range(n_epochs):
@@ -198,15 +199,24 @@ for epoch in range(n_epochs):
     with torch.no_grad():
         X_test = X_test.to(device)
         pred = Input_model(X_test)
-        pred = Output_model(pred)   
-        #_, pred = torch.max(pred, dim=1) for classification
-        preds += pred.detach().cpu().numpy().tolist()
-        labels += y_test.detach().cpu().numpy().tolist()
-        plot_pred.append(preds)
+        pred = Output_model(pred).numpy()     
+        target = y_test.detach().numpy()
+        m = len(target)
+        loss = (1/(m)) * np.sum((pred - target) ** 2)
+        test_loss.append(loss)
 
-plot_array = [i.detach().numpy() for i in plot_loss]
-plt.plot(range(n_epochs),plot_array )
+plot_training_loss = [i.detach().numpy() for i in plot_loss]
+plot_test_loss = [i for i in test_loss]
+print("Epoch 5000 training loss {} test loss {}".format(plot_training_loss[-1],test_loss[-1]))
+plt.plot(range(n_epochs),plot_training_loss,'-b',label="train loss")
+plt.plot(range(n_epochs),plot_test_loss,'-r',label = "test loss")
+
+plt.title("BH dataset regression modular training ")
+plt.xlabel("epochs")
+plt.ylabel("loss")
+plt.legend(loc="upper right")
 plt.show()
+
 
 """
 pred = Input_model(X_test)
